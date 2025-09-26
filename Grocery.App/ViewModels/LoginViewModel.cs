@@ -1,45 +1,78 @@
-﻿
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Grocery.Core.Interfaces.Services;
 using Grocery.Core.Models;
 
-namespace Grocery.App.ViewModels
+namespace Grocery.App.ViewModels;
+
+public partial class LoginViewModel : BaseViewModel
 {
-    public partial class LoginViewModel : BaseViewModel
+    private readonly IAuthService _authService;
+    private readonly GlobalViewModel _global;
+
+    [ObservableProperty]
+    private string email = string.Empty;
+
+    [ObservableProperty]
+    private string password = string.Empty;
+
+    [ObservableProperty]
+    private string loginMessage = string.Empty;
+
+    public LoginViewModel(IAuthService authService, GlobalViewModel global)
     {
-        private readonly IAuthService _authService;
-        private readonly GlobalViewModel _global;
+        _authService = authService;
+        _global = global;
+    }
 
-        [ObservableProperty]
-        private string email = "user3@mail.com";
-
-        [ObservableProperty]
-        private string password = "user3";
-
-        [ObservableProperty]
-        private string loginMessage;
-
-        public LoginViewModel(IAuthService authService, GlobalViewModel global)
-        { //_authService = App.Services.GetServices<IAuthService>().FirstOrDefault();
-            _authService = authService;
-            _global = global;
-        }
-
-        [RelayCommand]
-        private void Login()
+    [RelayCommand]
+    private void Login()
+    {
+        if (string.IsNullOrWhiteSpace(Email) || string.IsNullOrWhiteSpace(Password))
         {
-            Client? authenticatedClient = _authService.Login(Email, Password);
-            if (authenticatedClient != null)
-            {
-                LoginMessage = $"Welkom {authenticatedClient.Name}!";
-                _global.Client = authenticatedClient;
-                Application.Current.MainPage = new AppShell();
-            }
-            else
-            {
-                LoginMessage = "Ongeldige inloggegevens.";
-            }
+            LoginMessage = "Vul zowel e-mail als wachtwoord in.";
+            return;
         }
+
+        Client? authenticatedClient = _authService.Login(Email, Password);
+        if (authenticatedClient != null)
+        {
+            LoginMessage = $"Welkom {authenticatedClient.Name}!";
+            _global.Client = authenticatedClient;
+            Application.Current.MainPage = new AppShell(); // Navigeer naar hoofdscherm
+        }
+        else
+        {
+            LoginMessage = "Ongeldige inloggegevens.";
+        }
+    }
+
+    [RelayCommand]
+    private void Register()
+    {
+        if (string.IsNullOrWhiteSpace(Email) || string.IsNullOrWhiteSpace(Password))
+        {
+            LoginMessage = "Vul e-mail en wachtwoord in om te registreren.";
+            return;
+        }
+
+        bool success = _authService.Register(Email, Password);
+        if (success)
+        {
+            LoginMessage = "Registratie gelukt! Je kunt nu inloggen.";
+        }
+        else
+        {
+            LoginMessage = "Registratie mislukt. Gebruiker bestaat al?";
+        }
+    }
+
+    [RelayCommand]
+    private void Logout()
+    {
+        _authService.Logout();
+        _global.Client = null;
+        LoginMessage = "Je bent uitgelogd.";
+        Application.Current.MainPage = new LoginView(); // Terug naar loginpagina
     }
 }

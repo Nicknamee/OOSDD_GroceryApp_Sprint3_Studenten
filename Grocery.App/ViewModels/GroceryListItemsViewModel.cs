@@ -39,9 +39,9 @@ namespace Grocery.App.ViewModels
             GetAvailableProducts();
         }
 
-		private List<Product> _allAvailableProducts = new();
+		private List<Product> _allAvailableProducts = new(); // alle producten die beschikbaar zijn.
 
-		private void GetAvailableProducts()
+		private void GetAvailableProducts() // slaat alles op
 		{
 			_allAvailableProducts = _productService.GetAll()
 				.Where(p => MyGroceryListItems.All(g => g.ProductId != p.Id) && p.Stock > 0)
@@ -94,11 +94,11 @@ namespace Grocery.App.ViewModels
         [RelayCommand]
         private void Search(string term)
         {
-            term = term?.Trim() ?? string.Empty;
+            term = term?.Trim() ?? string.Empty; //Nooit null spaties worden verwijdered
 
-            var filtered = _allAvailableProducts
+            var filtered = _allAvailableProducts //Alle producten
                 .Where(p => string.IsNullOrWhiteSpace(term) ||
-                            (p.Name?.IndexOf(term, StringComparison.OrdinalIgnoreCase) >= 0))
+                            (p.Name?.IndexOf(term, StringComparison.OrdinalIgnoreCase) >= 0)) //Hoofdletters 
                 .ToList();
 
             AvailableProducts.Clear();
